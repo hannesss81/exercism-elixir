@@ -3,40 +3,31 @@ defmodule BeerSong do
   Get a single verse of the beer song
   """
   @spec verse(integer) :: String.t()
-  def verse(number) do
-    case number do
-      2 -> two()
-      1 -> one()
-      0 -> zero()
-      _ -> several(number)
-    end
-  end
-
-  defp two do
+  def verse(2) do
     """
     2 bottles of beer on the wall, 2 bottles of beer.
     Take one down and pass it around, 1 bottle of beer on the wall.
     """
   end
 
-  defp one do
+  def verse(1) do
     """
     1 bottle of beer on the wall, 1 bottle of beer.
     Take it down and pass it around, no more bottles of beer on the wall.
     """
   end
 
-  defp zero do
+  def verse(0) do
     """
     No more bottles of beer on the wall, no more bottles of beer.
     Go to the store and buy some more, 99 bottles of beer on the wall.
     """
   end
 
-  defp several(n) do
+  def verse(number) do
     """
-    #{n} bottles of beer on the wall, #{n} bottles of beer.
-    Take one down and pass it around, #{n - 1} bottles of beer on the wall.
+    #{number} bottles of beer on the wall, #{number} bottles of beer.
+    Take one down and pass it around, #{number - 1} bottles of beer on the wall.
     """
   end
 
