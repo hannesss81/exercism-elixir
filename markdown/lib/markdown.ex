@@ -12,61 +12,65 @@ defmodule Markdown do
   """
   @spec parse(String.t()) :: String.t()
   def parse(m) do
-    String.split(m, "\n")
+    m
+    |> String.split("\n")
     |> Enum.map(&(process(&1, String.first(&1))))
     |> Enum.join()
-    |> patch()
+    |> patch_list()
   end
 
-  defp process(t, "#"), do: enclose_with_header_tag(parse_header_md_level(t))
-  defp process(t, "*"), do: parse_list_md_level(t)
-  defp process(t, _), do: enclose_with_paragraph_tag(String.split(t))
+  defp process(row, "#"), do: enclose_with_header_tag(parse_header_md_level(row))
+  defp process(row, "*"), do: parse_list_md_level(row)
+  defp process(row, _), do: enclose_with_paragraph_tag(String.split(row))
 
-  defp parse_header_md_level(hwt) do
-    [h | t] = String.split(hwt)
-    {to_string(String.length(h)), Enum.join(t, " ")}
+  defp parse_header_md_level(row) do
+    [header | content] = String.split(row)
+    {String.length(header), Enum.join(content, " ")}
   end
 
-  defp parse_list_md_level(l) do
-    t = String.split(String.trim_leading(l, "* "))
-    "<li>" <> join_words_with_tags(t) <> "</li>"
+  defp parse_list_md_level(row) do
+    content = String.split(String.trim_leading(row, "* "))
+    "<li>" <> join_words_with_tags(content) <> "</li>"
   end
 
-  defp enclose_with_header_tag({hl, htl}) do
-    "<h" <> hl <> ">" <> htl <> "</h" <> hl <> ">"
+  defp enclose_with_header_tag({l, content}) do
+    "<h#{l}>#{content}</h#{l}>"
   end
 
-  defp enclose_with_paragraph_tag(t) do
-    "<p>#{join_words_with_tags(t)}</p>"
+  defp enclose_with_paragraph_tag(content) do
+    "<p>#{join_words_with_tags(content)}</p>"
   end
 
-  defp join_words_with_tags(t) do
-    Enum.join(Enum.map(t, fn w -> replace_md_with_tag(w) end), " ")
+  defp join_words_with_tags(words_md) do
+    words_md
+    |> Enum.map(&(replace_md_with_tag(&1)))
+    |> Enum.join(" ")
   end
 
-  defp replace_md_with_tag(w) do
-    replace_prefix_md(w)
+  defp replace_md_with_tag(word_md) do
+    word_md
+    |> replace_prefix_md()
     |> replace_suffix_md()
   end
 
-  defp replace_prefix_md(w) do
+  defp replace_prefix_md(word_md) do
     cond do
-      w =~ ~r/^#{"__"}{1}/ -> String.replace(w, ~r/^#{"__"}{1}/, "<strong>", global: false)
-      w =~ ~r/^[#{"_"}{1}][^#{"_"}+]/ -> String.replace(w, ~r/_/, "<em>", global: false)
-      true -> w
+      String.starts_with?(word_md, "__") -> String.replace_prefix(word_md, "__", "<strong>")
+      String.starts_with?(word_md, "_") -> String.replace_prefix(word_md, "_", "<em>")
+      true -> word_md
     end
   end
 
-  defp replace_suffix_md(w) do
+  defp replace_suffix_md(word_md) do
     cond do
-      w =~ ~r/#{"__"}{1}$/ -> String.replace(w, ~r/#{"__"}{1}$/, "</strong>")
-      w =~ ~r/[^#{"_"}{1}]/ -> String.replace(w, ~r/_/, "</em>")
-      true -> w
+      String.ends_with?(word_md, "__") -> String.replace_suffix(word_md, "__", "</strong>")
+      String.ends_with?(word_md, "_") -> String.replace_suffix(word_md, "_", "</em>")
+      true -> word_md
     end
   end
 
-  defp patch(l) do
-    l
+  defp patch_list(row) do
+    row
     |> String.replace("<li>", "<ul><li>", global: false)
     |> String.replace_suffix("</li>", "</li></ul>")
   end
