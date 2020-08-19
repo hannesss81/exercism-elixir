@@ -14,14 +14,13 @@ defmodule Markdown do
   def parse(m) do
     m
     |> String.split("\n")
-    |> Enum.map(&(process(&1, String.first(&1))))
-    |> Enum.join()
+    |> Enum.map_join(&process/1)
     |> patch_list()
   end
 
-  defp process(row, "#"), do: enclose_with_header_tag(parse_header_md_level(row))
-  defp process(row, "*"), do: parse_list_md_level(row)
-  defp process(row, _), do: enclose_with_paragraph_tag(String.split(row))
+  defp process(row = "#" <> _), do: enclose_with_header_tag(parse_header_md_level(row))
+  defp process(row = "*" <> _), do: parse_list_md_level(row)
+  defp process(row), do: enclose_with_paragraph_tag(String.split(row))
 
   defp parse_header_md_level(row) do
     [header | content] = String.split(row)
@@ -43,8 +42,7 @@ defmodule Markdown do
 
   defp join_words_with_tags(words_md) do
     words_md
-    |> Enum.map(&(replace_md_with_tag(&1)))
-    |> Enum.join(" ")
+    |> Enum.map_join(" ", &replace_md_with_tag/1)
   end
 
   defp replace_md_with_tag(word_md) do
